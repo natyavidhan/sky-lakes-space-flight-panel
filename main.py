@@ -6,14 +6,16 @@ def map_value(value, min1, max1, min2, max2):
     return (value - min1) / (max1 - min1) * (max2 - min2) + min2
 
 class Graph:
-    def __init__(self, screen, width, height, lines:list, range_x:int, range_y:list):
+    def __init__(self, screen, width, height, lines:list, range_x:int, range_y:list, grid=(10, 5)):
         self.screen = screen
         self.width = width
         self.height = height
         self.lines = lines
         self.range_x = range_x
         self.range_y = range_y
+        self.grid = grid
         self.canvas = pygame.Surface((width, height))
+        self.label = pygame.font.SysFont("Arial", 20).render(",".join(lines), True, (255,255,255))
         self.data = {}
         for line in lines:
             self.data[line] = []
@@ -23,6 +25,9 @@ class Graph:
     def draw(self):
         self.canvas.fill((0,0,0))
         self.draw_grid()
+        rect = self.label.get_rect()
+        rect.center = (self.width/2, self.height/2)
+        self.canvas.blit(self.label, rect)
         pygame.draw.rect(self.canvas, (255,255,255), (0,0,self.width,self.height), 1, 5)
         for idx, line in enumerate(self.lines):
             self.draw_line(line, self.colors[idx])
@@ -45,10 +50,21 @@ class Graph:
         self.data[line].append(freq)
 
     def draw_grid(self):
-        for x in range(0, self.width, 100):
+        font = pygame.font.SysFont("Arial", 10)
+        for x in range(self.grid[0]):
+            x = map_value(x, 0, self.grid[0], 0, self.width)
             pygame.draw.line(self.canvas, (255,255,255), (x,0), (x,self.height), 1)
-        for y in range(0, self.height, 100):
+            # text = font.render(str(map_value(x, 0, self.width, self.range_x[0], self.range_x[1])), True, (255,255,255))
+            # rect = text.get_rect()
+            # rect.center = (x, self.height - 10)
+            # self.canvas.blit(text, rect)
+        for y in range(self.grid[1]):
+            y = map_value(y, 0, self.grid[1], 0, self.height)
             pygame.draw.line(self.canvas, (255,255,255), (0,y), (self.width,y), 1)
+            text = font.render(str(round(map_value(y, 0, self.height, self.range_y[0], self.range_y[1]), 3)), True, (255,255,255))
+            rect = text.get_rect()
+            rect.center = (10, y+rect.height/2)
+            self.canvas.blit(text, rect)
 
 
 class Button:
@@ -83,10 +99,10 @@ class App:
         print(self.width, self.height)
         self.clock = pygame.time.Clock()
         self.running = True
-        self.alt = Graph(self.screen, 240, 170, ["alt"], 100, [-99, 99])
-        self.acc = Graph(self.screen, 240, 170, ["acc"], 100, [-99, 99])
-        self.vel = Graph(self.screen, 240, 170, ["vel"], 100, [-99, 99])
-        self.coor = Graph(self.screen, 860, 240, ["x", "y", "z"], 100, [-100, 100])
+        self.alt = Graph(self.screen, 240, 170, ["alt"], 100, [-99, 99], grid=(5, 5))
+        self.acc = Graph(self.screen, 240, 170, ["acc"], 100, [-99, 99], grid=(5, 5))
+        self.vel = Graph(self.screen, 240, 170, ["vel"], 100, [-99, 99], grid=(5, 5))
+        self.coor = Graph(self.screen, 1115, 240, ["x", "y", "z"], 300, [-100, 100])
 
     def run(self):
         x = 0
@@ -110,7 +126,7 @@ class App:
             self.screen.blit(self.alt.canvas, (25,300))
             self.screen.blit(self.acc.canvas, (25,480))
             self.screen.blit(self.vel.canvas, (25,660))
-            self.screen.blit(self.coor.canvas, (280,30))
+            self.screen.blit(self.coor.canvas, (25,30))
 
 
             pygame.display.flip()
